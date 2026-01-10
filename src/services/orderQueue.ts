@@ -34,7 +34,7 @@ const redisConnection = getRedisConnection();
 redisConnection.on('connect', () => logger.info('Successfully connected to Redis'));
 redisConnection.on('error', (err) => logger.error('Redis Connection Error:', err));
 
-export const orderQueue = new Queue('order-execution', { connection: redisConnection });
+export const orderQueue = new Queue('order-execution', { connection: redisConnection as any });
 
 const router = new DexRouter();
 
@@ -102,7 +102,7 @@ export const processOrder = async (job: Job) => {
 
 // Worker implementation
 const worker = new Worker('order-execution', processOrder, { 
-  connection: redisConnection,
+  connection: redisConnection as any,
   concurrency: 10,
   limiter: {
     max: 100,
