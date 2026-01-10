@@ -10,9 +10,17 @@ import { logger } from '../utils/logger';
 const getRedisConnection = () => {
   if (config.REDIS_URL) {
     logger.info('Connecting to Redis using REDIS_URL');
-    return new IORedis(config.REDIS_URL, { maxRetriesPerRequest: null });
+    return new IORedis(config.REDIS_URL, { 
+      maxRetriesPerRequest: null,
+      connectTimeout: 10000 
+    });
   } else {
-    logger.info(`Connecting to Redis using host: ${config.REDIS_HOST}, port: ${config.REDIS_PORT}`);
+    // In production (Railway), we MUST have a REDIS_URL
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('FATAL: REDIS_URL is not set in production environment!');
+    }
+    
+    logger.info(`Connecting to local Redis at ${config.REDIS_HOST}:${config.REDIS_PORT}`);
     return new IORedis({ 
       host: config.REDIS_HOST, 
       port: config.REDIS_PORT, 
