@@ -39,9 +39,12 @@ describe('DexRouter', () => {
   });
   
   test('executeSwap returns txHash', async () => {
+      // Mock Math.random to always be > 0.1 to avoid random slippage failure
+      const spy = jest.spyOn(Math, 'random').mockReturnValue(0.5);
       const result = await router.executeSwap('RAYDIUM', 1);
       expect(result.txHash).toBeDefined();
       expect(result.txHash).toContain('5x');
       expect(result.executedPrice).toBeGreaterThan(0);
+      spy.mockRestore();
   });
 });

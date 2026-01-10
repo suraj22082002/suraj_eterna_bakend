@@ -16,6 +16,7 @@ model Order {
   status        String   // "PENDING", "ROUTING", "BUILDING", "SUBMITTED", "CONFIRMED", "FAILED"
   txHash        String?
   executionPrice Float?
+  limitPrice    Float?
   dex           String?  // "RAYDIUM", "METEORA"
   errorReason   String?
   createdAt     DateTime @default(now())

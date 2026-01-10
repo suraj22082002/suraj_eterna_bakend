@@ -11,6 +11,22 @@ const app = Fastify({ logger: true });
 app.register(cors);
 app.register(websocket);
 
+app.get('/', async () => {
+  return { 
+    name: 'Eterna API', 
+    version: '1.0.0', 
+    status: 'running',
+    endpoints: {
+      health: '/health',
+      orders: '/api/orders'
+    }
+  };
+});
+
+app.get('/health', async () => {
+  return { status: 'ok', timestamp: new Date().toISOString() };
+});
+
 app.register(async function (fastify) {
   fastify.get('/ws', { websocket: true }, (connection: any, req) => {
     const query = req.query as { orderId?: string };

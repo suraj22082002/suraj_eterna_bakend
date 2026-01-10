@@ -7,7 +7,8 @@ const OrderSchema = z.object({
   inputToken: z.string(),
   outputToken: z.string(),
   amount: z.number().positive(),
-  type: z.enum(['MARKET', 'LIMIT', 'SNIPER']).default('MARKET')
+  type: z.enum(['MARKET', 'LIMIT', 'SNIPER']).default('MARKET'),
+  limitPrice: z.number().positive().optional()
 });
 
 export async function orderRoutes(fastify: FastifyInstance) {
@@ -22,7 +23,8 @@ export async function orderRoutes(fastify: FastifyInstance) {
           inputToken: body.inputToken,
           outputToken: body.outputToken,
           amount: body.amount,
-          status: 'PENDING'
+          status: 'PENDING',
+          limitPrice: body.limitPrice
         }
       });
 
@@ -31,6 +33,7 @@ export async function orderRoutes(fastify: FastifyInstance) {
         orderId: order.id,
         ...body
       }, {
+        jobId: order.id,
         attempts: 3,
         backoff: {
           type: 'exponential',
@@ -56,5 +59,47 @@ export async function orderRoutes(fastify: FastifyInstance) {
           take: 50
       });
       return orders;
+  });
+
+  fastify.get('/:id', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const order = await prisma.order.findUnique({
+      where: { id }
+    });
+
+    if (!order) {
+      return reply.code(404).send({ error: 'Order not found' });
+    }
+
+    return order;
+  });
+
+  fastify.delete('/:id', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    
+    const order = await prisma.order.findUnique({
+      where: { id }
+    });
+
+    if (!order) {
+      return reply.code(404).send({ error: 'Order not found' });
+    }
+
+    if (order.status !== 'PENDING') {
+      return reply.code(400).send({ error: `Cannot cancel order in ${order.status} status` });
+    }
+
+    // Try to remove from BullMQ
+    const job = await orderQueue.getJob(id);
+    if (job) {
+      await job.remove();
+    }
+
+    await prisma.order.update({
+      where: { id },
+      data: { status: 'CANCELLED' }
+    });
+
+    return { message: 'Order cancelled successfully' };
   });
 }

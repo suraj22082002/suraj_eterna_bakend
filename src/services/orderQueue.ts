@@ -14,9 +14,8 @@ export const orderQueue = new Queue('order-execution', { connection });
 
 const router = new DexRouter();
 
-// Worker implementation
-const worker = new Worker('order-execution', async (job: Job) => {
-  const { orderId, inputToken, outputToken, amount } = job.data;
+export const processOrder = async (job: Job) => {
+  const { orderId, inputToken, outputToken, amount, type, limitPrice } = job.data;
   
   const updateStatus = async (status: string, data?: any) => {
     logger.info(`Order ${orderId}: ${status}`, data || '');
@@ -39,6 +38,21 @@ const worker = new Worker('order-execution', async (job: Job) => {
     await updateStatus('ROUTING');
     const bestQuote = await router.getBestQuote(inputToken, outputToken, amount);
     
+    // Handle LIMIT and SNIPER orders
+    if ((type === 'LIMIT' || type === 'SNIPER') && limitPrice) {
+      const orderTypeLabel = type === 'SNIPER' ? 'Snipe' : 'Limit';
+      logger.info(`Order ${orderId}: Checking ${orderTypeLabel} price ${limitPrice} against best quote ${bestQuote.price}`);
+      
+      // In this simulation, price is output amount. 
+      if (bestQuote.price < limitPrice) {
+        throw new Error(`${orderTypeLabel} price not met: Expected at least ${limitPrice}, but best quote is ${bestQuote.price.toFixed(2)}`);
+      }
+      
+      if (type === 'SNIPER') {
+        logger.info(`Order ${orderId}: Target sniped successfully!`);
+      }
+    }
+
     await updateStatus('BUILDING', { dex: bestQuote.dex });
 
     // 3. Submitted
@@ -60,7 +74,10 @@ const worker = new Worker('order-execution', async (job: Job) => {
     await updateStatus('FAILED', { errorReason: error.message });
     throw error;
   }
-}, { 
+};
+
+// Worker implementation
+const worker = new Worker('order-execution', processOrder, { 
   connection,
   concurrency: 10, // Max 10 concurrent orders
   limiter: {

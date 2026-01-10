@@ -10,13 +10,27 @@ A high-performance order execution engine backend built with Node.js, Fastify, B
 - **Real-time Updates**: WebSocket integration streams order status (`PENDING` -> `ROUTING` -> `SUBMITTED` -> `CONFIRMED`) to the client.
 - **Resilience**: Automatic retries and error handling.
 
-## 🛠 Tech Stack
+### API Endpoints
 
-- **Runtime**: Node.js + TypeScript
-- **API Framework**: Fastify (HTTP + WebSocket)
-- **Queue**: BullMQ + Redis
-- **Database**: PostgreSQL (via Prisma ORM)
-- **Validation**: Zod
+- `POST /api/orders/execute`: Execute a new order.
+  - Body: `{ inputToken, outputToken, amount, type: "MARKET" | "LIMIT" | "SNIPER", limitPrice? }`
+- `GET /api/orders/history`: Get last 50 orders.
+- `GET /api/orders/:id`: Get status of a specific order.
+- `DELETE /api/orders/:id`: Cancel a pending order.
+- `GET /health`: System health check.
+
+### Order Types
+- **MARKET**: Executes immediately at the best available price.
+- **LIMIT**: Executes only if the output amount is at least `limitPrice`.
+- **SNIPER**: Urgent execution that also requires output to be at least `limitPrice`.
+
+### Tech Stack
+- **Fastify**: High-performance web framework.
+- **Prisma**: Type-safe ORM for PostgreSQL.
+- **BullMQ**: Reliable message queue for order processing.
+- **Redis**: Backend for BullMQ.
+- **TypeScript**: For type safety.
+- **Jest**: Testing framework.
 
 ## 📦 Setup & Installation
 

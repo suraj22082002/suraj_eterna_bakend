@@ -11,7 +11,9 @@ export class DexRouter {
     await sleep(200); // Network delay
     // Raydium often has slightly different liquidity depth
     const variance = 0.98 + Math.random() * 0.04; // +/- 2% variance around a base
-    const price = this.basePrice * variance;
+    const priceImpact = Math.max(0, (amount / 1000) * 0.01); // 1% impact per 1000 units
+    const price = (this.basePrice * variance) * (1 - priceImpact);
+    
     return {
       dex: 'RAYDIUM',
       price: price,
@@ -23,7 +25,9 @@ export class DexRouter {
     await sleep(200); // Network delay
     // Meteora might be tighter or looser depending on the pool type
     const variance = 0.97 + Math.random() * 0.05; // Slightly higher variance
-    const price = this.basePrice * variance;
+    const priceImpact = Math.max(0, (amount / 1000) * 0.005); // 0.5% impact per 1000 units (deeper liquidity)
+    const price = (this.basePrice * variance) * (1 - priceImpact);
+
     return {
       dex: 'METEORA',
       price: price,
@@ -41,27 +45,13 @@ export class DexRouter {
 
     logger.info(`Quotes received - Raydium: $${raydium.price.toFixed(2)}, Meteora: $${meteora.price.toFixed(2)}`);
 
-    // For buying outputToken (e.g. SOL), we want the Lowest price in terms of Input (USDC)
-    // Or if we are selling Input (SOL) for Output (USDC), we want Highest price.
-    // Let's assume Input=SOL, Output=USDC (Selling). We want HIGHER price.
-    // If Input=USDC, Output=SOL (Buying). We want LOWER price (more SOL for same USDC).
+    // We want the best price for the user. 
+    // In this simulation, price represents the output amount for the given input.
+    // Thus, we choose the DEX that offers the highest price (most output tokens).
+    const bestQuote = raydium.price >= meteora.price ? raydium : meteora;
     
-    // Simplification: We assume we are buying the OutputToken with InputToken.
-    // Quote is "Price of 1 Unit of OutputToken in InputToken".
-    // We want the LOWEST price.
-    
-    // Wait, usually quotes are "Amount Out for Amount In".
-    // Let's stick to "Amount Out". 
-    // If I give 1 SOL, how many USDC do I get? (Sell SOL) -> Maximize.
-    // If I give 100 USDC, how many SOL do I get? (Buy SOL) -> Maximize.
-    
-    // Let's redefine mock to return "Output Amount" for simplicity.
-    // If basePrice is 150 (SOL/USDC), and I swap 1 SOL. I get ~150 USDC.
-    
-    // RE-WRITING LOGIC TO BE "AMOUNT OUT" BASED.
-    
-    // Let's restart the logic inside the function to be clearer.
-    return raydium.price > meteora.price ? raydium : meteora; // Assuming Price = Output Amount
+    logger.info(`Selected best DEX: ${bestQuote.dex} at price $${bestQuote.price.toFixed(2)}`);
+    return bestQuote;
   }
 
   async executeSwap(dex: string, amount: number): Promise<{ txHash: string, executedPrice: number }> {
