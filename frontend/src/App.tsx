@@ -36,6 +36,8 @@ interface Order {
   createdAt: string;
 }
 
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 const App = () => {
   const [activeTab, setActiveTab] = useState<'trade' | 'history'>('trade');
   const [orders, setOrders] = useState<Order[]>([]);
@@ -62,7 +64,7 @@ const App = () => {
 
   const fetchOrders = async () => {
     try {
-      const res = await fetch('/api/orders/history');
+      const res = await fetch(`${API_BASE}/api/orders/history`);
       const data = await res.json();
       setOrders(data);
     } catch (err) {
@@ -74,7 +76,7 @@ const App = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch('/api/orders/execute', {
+      const res = await fetch(`${API_BASE}/api/orders/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -99,7 +101,7 @@ const App = () => {
 
   const cancelOrder = async (id: string) => {
     try {
-      await fetch(`/api/orders/${id}`, { method: 'DELETE' });
+      await fetch(`${API_BASE}/api/orders/${id}`, { method: 'DELETE' });
       fetchOrders();
     } catch (err) {
       console.error('Failed to cancel:', err);

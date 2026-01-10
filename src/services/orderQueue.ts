@@ -5,12 +5,15 @@ import { prisma } from '../db';
 import { orderEvents } from '../utils/events';
 import { logger } from '../utils/logger';
 
-const connection = {
-  host: config.REDIS_HOST,
-  port: config.REDIS_PORT
-};
+const connection = config.REDIS_URL 
+  ? { url: config.REDIS_URL } 
+  : { host: config.REDIS_HOST, port: config.REDIS_PORT };
 
-export const orderQueue = new Queue('order-execution', { connection });
+export const orderQueue = new Queue('order-execution', { 
+  connection: config.REDIS_URL ? undefined : connection,
+  //@ts-ignore
+  connection: config.REDIS_URL ? config.REDIS_URL : connection
+});
 
 const router = new DexRouter();
 
