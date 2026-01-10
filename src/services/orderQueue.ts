@@ -8,16 +8,19 @@ import { logger } from '../utils/logger';
 
 // Create a reusable Redis connection instance
 const getRedisConnection = () => {
-  if (config.REDIS_URL) {
-    logger.info('Connecting to Redis using REDIS_URL');
-    return new IORedis(config.REDIS_URL, { 
+  const url = config.REDIS_URL?.trim();
+  
+  if (url && url.length > 0) {
+    logger.info(`Connecting to Redis using URL: ${url.substring(0, 15)}...`);
+    return new IORedis(url, { 
       maxRetriesPerRequest: null,
-      connectTimeout: 10000 
+      connectTimeout: 15000 
     });
   } else {
     // In production (Railway), we MUST have a REDIS_URL
     if (process.env.NODE_ENV === 'production') {
-      throw new Error('FATAL: REDIS_URL is not set in production environment!');
+      logger.error('CRITICAL: REDIS_URL is missing or empty in production!');
+      throw new Error('REDIS_URL_MISSING');
     }
     
     logger.info(`Connecting to local Redis at ${config.REDIS_HOST}:${config.REDIS_PORT}`);

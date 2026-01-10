@@ -9,10 +9,15 @@ export const config = {
   DATABASE_URL: process.env.DATABASE_URL,
 };
 
-console.log('--- Configuration Loaded ---');
-console.log(`Port: ${config.PORT}`);
-console.log(`Redis Mode: ${config.REDIS_URL ? 'URL' : 'Host/Port'}`);
-if (!config.REDIS_URL) {
-    console.log(`Redis Host: ${config.REDIS_HOST}:${config.REDIS_PORT}`);
+console.log('--- Environment Check ---');
+console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+console.log(`PORT: ${config.PORT}`);
+console.log(`DATABASE_URL present: ${!!config.DATABASE_URL}`);
+console.log(`REDIS_URL present: ${!!config.REDIS_URL}`);
+if (config.REDIS_URL) {
+    console.log(`REDIS_URL (masked): ${config.REDIS_URL.substring(0, 15)}...`);
+} else {
+    console.log(`REDIS_HOST: ${config.REDIS_HOST}`);
+    console.log(`REDIS_PORT: ${config.REDIS_PORT}`);
 }
 console.log('---------------------------');
