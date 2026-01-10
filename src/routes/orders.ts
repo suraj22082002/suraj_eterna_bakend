@@ -41,10 +41,13 @@ export async function orderRoutes(fastify: FastifyInstance) {
         }
       });
 
+      const protocol = request.protocol === 'https' ? 'wss' : 'ws';
+      const host = request.hostname;
+
       return reply.code(201).send({ 
         orderId: order.id,
         message: "Order queued",
-        wsUrl: `ws://localhost:${process.env.PORT || 3000}/ws?orderId=${order.id}`
+        wsUrl: `${protocol}://${host}/ws?orderId=${order.id}`
       });
 
     } catch (error: any) {
