@@ -7,14 +7,23 @@ import { orderEvents } from '../utils/events';
 import { logger } from '../utils/logger';
 
 // Create a reusable Redis connection instance
-const redisConnection = config.REDIS_URL 
-  ? new IORedis(config.REDIS_URL, { maxRetriesPerRequest: null })
-  : new IORedis({ 
+const getRedisConnection = () => {
+  if (config.REDIS_URL) {
+    logger.info('Connecting to Redis using REDIS_URL');
+    return new IORedis(config.REDIS_URL, { maxRetriesPerRequest: null });
+  } else {
+    logger.info(`Connecting to Redis using host: ${config.REDIS_HOST}, port: ${config.REDIS_PORT}`);
+    return new IORedis({ 
       host: config.REDIS_HOST, 
       port: config.REDIS_PORT, 
       maxRetriesPerRequest: null 
     });
+  }
+};
 
+const redisConnection = getRedisConnection();
+
+redisConnection.on('connect', () => logger.info('Successfully connected to Redis'));
 redisConnection.on('error', (err) => logger.error('Redis Connection Error:', err));
 
 export const orderQueue = new Queue('order-execution', { connection: redisConnection });
