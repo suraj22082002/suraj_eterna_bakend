@@ -37,7 +37,7 @@ interface Order {
 }
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
-console.log('Terminal: Connecting to API at', API_BASE || 'local proxy');
+console.log('Terminal: Initializing with API_BASE:', API_BASE || 'Relative (Proxy)');
 
 const App = () => {
   const [activeTab, setActiveTab] = useState<'trade' | 'history'>('trade');
@@ -65,19 +65,24 @@ const App = () => {
 
   const fetchOrders = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/orders/history`);
+      const url = `${API_BASE}/api/orders/history`;
+      const res = await fetch(url);
       const data = await res.json();
       setOrders(data);
     } catch (err) {
-      console.error('Failed to fetch orders:', err);
+      console.error('Fetch Orders Failed:', err);
     }
   };
 
   const handleExecute = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    const url = `${API_BASE}/api/orders/execute`;
+    
+    console.log(`Executing request to: ${url}`);
+    
     try {
-      const res = await fetch(`${API_BASE}/api/orders/execute`, {
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -86,15 +91,17 @@ const App = () => {
           limitPrice: formData.type !== 'MARKET' ? parseFloat(formData.limitPrice) : undefined
         })
       });
+      
       const data = await res.json();
       if (res.ok) {
         fetchOrders();
         setActiveTab('history');
       } else {
-        alert(data.error || 'Execution failed');
+        alert(`Server Error: ${data.error || 'Execution failed'}`);
       }
-    } catch (err) {
-      alert('Network error');
+    } catch (err: any) {
+      console.error('Network Error Details:', err);
+      alert(`Network Error: ${err.message}. Check console (F12) for details. Target: ${url}`);
     } finally {
       setLoading(false);
     }
@@ -105,7 +112,7 @@ const App = () => {
       await fetch(`${API_BASE}/api/orders/${id}`, { method: 'DELETE' });
       fetchOrders();
     } catch (err) {
-      console.error('Failed to cancel:', err);
+      console.error('Cancel Order Failed:', err);
     }
   };
 
