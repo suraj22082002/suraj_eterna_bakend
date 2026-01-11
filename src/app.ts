@@ -8,7 +8,9 @@ import { WebSocket } from 'ws';
 
 const app = Fastify({ logger: true });
 
-app.register(cors);
+app.register(cors, {
+  origin: true // In production, allow all origins for the prototype
+});
 app.register(websocket);
 
 app.get('/', async () => {

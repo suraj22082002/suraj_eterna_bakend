@@ -37,6 +37,7 @@ interface Order {
 }
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
+console.log('Terminal: Connecting to API at', API_BASE || 'local proxy');
 
 const App = () => {
   const [activeTab, setActiveTab] = useState<'trade' | 'history'>('trade');
