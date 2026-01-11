@@ -1,17 +1,21 @@
 FROM node:20-slim
 
+# Add build arguments for Vite
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
 WORKDIR /app
 
 COPY package*.json ./
 RUN npm install
 
 COPY . .
+
+# The build will now see the VITE_API_URL
 RUN npm run build
 
-# Install a simple web server to serve the build
 RUN npm install -g serve
 
 EXPOSE 3000
 
-# Serve the 'dist' folder created by 'npm run build'
 CMD ["serve", "-s", "dist", "-l", "3000"]

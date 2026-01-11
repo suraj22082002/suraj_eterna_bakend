@@ -37,7 +37,10 @@ interface Order {
 }
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
-console.log('Terminal: Initializing with API_BASE:', API_BASE || 'Relative (Proxy)');
+if (!API_BASE) {
+  console.warn('CRITICAL: VITE_API_URL is not set. API calls will fail.');
+}
+console.log('Terminal: Connecting to API at', API_BASE || 'MISSING_URL');
 
 const App = () => {
   const [activeTab, setActiveTab] = useState<'trade' | 'history'>('trade');
