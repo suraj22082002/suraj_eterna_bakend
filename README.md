@@ -24,13 +24,26 @@ A high-performance order execution engine backend built with Node.js, Fastify, B
 - **LIMIT**: Executes only if the output amount is at least `limitPrice`.
 - **SNIPER**: Urgent execution that also requires output to be at least `limitPrice`.
 
-### Tech Stack
-- **Fastify**: High-performance web framework.
-- **Prisma**: Type-safe ORM for PostgreSQL.
-- **BullMQ**: Reliable message queue for order processing.
-- **Redis**: Backend for BullMQ.
-- **TypeScript**: For type safety.
-- **Jest**: Testing framework.
+# Eterna Order Execution Engine
+
+A high-performance order execution engine with mock DEX routing (Raydium/Meteora), BullMQ task queuing, and real-time status updates via WebSockets.
+
+### 🚀 Live Deployment
+- **Dashboard (Frontend):** [https://modest-luck-production-7648.up.railway.app](https://modest-luck-production-7648.up.railway.app)
+- **API (Backend):** [https://surajeternabakend-production.up.railway.app](https://surajeternabakend-production.up.railway.app)
+
+### 🛠️ Tech Stack
+- **Frontend:** React, TypeScript, Tailwind CSS (Vite)
+- **Backend:** Node.js, Fastify, TypeScript
+- **Database:** PostgreSQL (Prisma ORM)
+- **Queue/Cache:** Redis, BullMQ
+- **DevOps:** Docker, Railway
+
+### 📋 Design Decisions
+- **Asynchronous Execution:** I chose a queue-based architecture using BullMQ and Redis. This ensures that even during high traffic (100 orders/min), the API remains responsive while workers process trades in the background.
+- **Order Types:** I implemented **Sniper Orders** as the primary focus because they demonstrate complex conditional logic (waiting for a target price/liquidity) before execution.
+- **Extensibility:** The engine uses a Strategy pattern in the `DexRouter`. To add more order types, one would simply add a new processor in `orderQueue.ts` and define the logic (e.g., trailing stops) without changing the routing or settlement code.
+
 
 ## 📦 Setup & Installation
 
